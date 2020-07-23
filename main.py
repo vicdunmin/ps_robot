@@ -10,7 +10,6 @@ from poke_env.server_configuration import ServerConfiguration
 from poke_env.server_configuration import ShowdownServerConfiguration
 
 
-
 my_player_config = PlayerConfiguration("A80VE", "123456")
 # If your server is accessible at my.custom.host:5432, and your authentication
 # endpoint is authentication-endpoint.com/action.php?
@@ -20,15 +19,16 @@ my_server_config = ServerConfiguration(
 )
 
 
-
 class MaxDamagePlayer(Player):
+
     def switch(self, battle):
         if (len(battle.available_switches) == 0):
             return self.choose_random_move(battle)
         max_type_adv = -np.inf
         switch = None
         for pokemon in battle.available_switches:
-            curr_type_adv = teampreview_performance(pokemon, battle.opponent_active_pokemon)
+            curr_type_adv = teampreview_performance(
+                pokemon, battle.opponent_active_pokemon)
             if (curr_type_adv > max_type_adv):
                 max_type_adv = curr_type_adv
                 switch = pokemon
@@ -45,11 +45,11 @@ class MaxDamagePlayer(Player):
                     battle.opponent_active_pokemon.type_1,
                     battle.opponent_active_pokemon.type_2,
                 )
-                if (move.type.name == selfType1): 
+                if (move.type.name == selfType1):
                     move_dmg_multiplier *= 1.5
                 elif (battle.active_pokemon.type_2 != None):
                     selfType2 = battle.active_pokemon.type_2.name
-                    if (move.type.name == selfType2): 
+                    if (move.type.name == selfType2):
                         move_dmg_multiplier *= 1.5
 
             move_fpower = move.base_power * move_dmg_multiplier
@@ -60,21 +60,15 @@ class MaxDamagePlayer(Player):
         if (max_power < 70):
             return self.switch(battle)
 
-
         # Finds the best move among available ones
         # best_move = max(battle.available_moves, key=lambda move: move.base_power)
         else:
             return self.create_order(battle.available_moves[max_i])
 
-
-
-
     def choose_move(self, battle):
         if battle.available_moves and (teampreview_performance(battle.active_pokemon, battle.opponent_active_pokemon) <= -1):
             return self.switch(battle)
 
-
-        
         # If the player can attack, it will
         elif battle.available_moves:
             return self.stayIn(battle)
@@ -82,11 +76,7 @@ class MaxDamagePlayer(Player):
         else:
             return self.switch(battle)
 
-        
-
-        
         # If no attack is available, a random switch will be made
-        
 
     def teampreview(self, battle):
         mon_performance = {}
@@ -102,12 +92,14 @@ class MaxDamagePlayer(Player):
             )
 
         # We sort our mons by performance
-        ordered_mons = sorted(mon_performance, key=lambda k: -mon_performance[k])
+        ordered_mons = sorted(
+            mon_performance, key=lambda k: -mon_performance[k])
 
         # We start with the one we consider best overall
         # We use i + 1 as python indexes start from 0
         #  but showdown's indexes start from 1
         return "/team " + "".join([str(i + 1) for i in ordered_mons])
+
 
 def teampreview_performance(mon_a, mon_b):
     # We evaluate the performance on mon_a against mon_b as its type advantage
@@ -187,7 +179,6 @@ Careful Nature
     # random_player = RandomPlayer(
     #     battle_format="gen8randombattle",
     # )
-    
 
     # Now, let's evaluate our player
     # cross_evaluation = await cross_evaluate(
@@ -204,25 +195,24 @@ Careful Nature
 
     max_damage_player = MaxDamagePlayer(
         battle_format="gen8ou",
-        server_configuration = ShowdownServerConfiguration,
-        player_configuration = my_player_config,
-        team = line_team,
-        max_concurrent_battles=10,
+        server_configuration=ShowdownServerConfiguration,
+        player_configuration=my_player_config,
+        team=line_team,
+        max_concurrent_battles=1
     )
-    await max_damage_player.accept_challenges(None, 10)
+    await max_damage_player.ladder(5)
 
     # rb_player = MaxDamagePlayer(
     #     battle_format="gen8randombattle",
-    #     server_configuration = ShowdownServerConfiguration,
-    #     player_configuration = my_player_config,
+    #     server_configuration=ShowdownServerConfiguration,
+    #     player_configuration=my_player_config,
     #     max_concurrent_battles=5
     # )
 
     # await rb_player.ladder(10)
 
-    
-    for battle in player.battles.values():
-        print(battle.rating, battle.opponent_rating)
+    # for battle in player.battles.values():
+    #     print(battle.rating, battle.opponent_rating)
 
 
 if __name__ == "__main__":
